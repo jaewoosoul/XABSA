@@ -1,0 +1,78 @@
+# XABSA Category Taxonomy
+# 도메인 일반형 카테고리 정의
+
+categories:
+  PRICE:
+    description: "가격, 비용, 가격대, 값, 할인"
+    examples: ["가격", "비싸다", "저렴하다", "가성비", "할인"]
+
+  QUALITY:
+    description: "품질, 퀄리티, 상태"
+    examples: ["품질", "퀄리티", "상태", "좋다", "나쁘다"]
+
+  DELIVERY:
+    description: "배송, 배달, 도착"
+    examples: ["배송", "배달", "도착", "빠르다", "늦다"]
+
+  SERVICE:
+    description: "서비스, 고객응대, 친절도"
+    examples: ["서비스", "직원", "친절", "응대", "cs"]
+
+  DESIGN:
+    description: "디자인, 외관, 모양, 색상"
+    examples: ["디자인", "외관", "모양", "색상", "예쁘다"]
+
+  PERFORMANCE:
+    description: "성능, 기능, 작동"
+    examples: ["성능", "기능", "작동", "빠르다", "느리다"]
+
+  DURABILITY:
+    description: "내구성, 수명, 튼튼함"
+    examples: ["내구성", "수명", "튼튼", "오래", "고장"]
+
+  USABILITY:
+    description: "사용성, 편의성, 편리함"
+    examples: ["사용", "편의", "편리", "쉽다", "어렵다"]
+
+  PACKAGING:
+    description: "포장, 패키징"
+    examples: ["포장", "패키징", "박스", "뽁뽁이"]
+
+  SIZE:
+    description: "크기, 사이즈, 치수"
+    examples: ["크기", "사이즈", "작다", "크다", "치수"]
+
+  RETURN:
+    description: "반품, 교환, 환불"
+    examples: ["반품", "교환", "환불", "as"]
+
+  VALUE:
+    description: "가성비, 가치, 만족도"
+    examples: ["가성비", "가치", "만족", "추천", "재구매"]
+
+  ETC:
+    description: "기타 모든 카테고리"
+    examples: []
+
+# Polarity 정의
+polarities:
+  - positive
+  - negative
+  - neutral
+
+# 매핑 규칙 (optional)
+category_mappings:
+  # SemEval categories → Our taxonomy
+  "FOOD": "QUALITY"
+  "DRINKS": "QUALITY"
+  "AMBIENCE": "DESIGN"
+  "RESTAURANT": "SERVICE"
+  "LOCATION": "ETC"
+
+  # 한국어 variation
+  "가격": "PRICE"
+  "품질": "QUALITY"
+  "배송": "DELIVERY"
+  "서비스": "SERVICE"
+  "디자인": "DESIGN"
+  "성능": "PERFORMANCE"
