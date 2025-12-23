@@ -1,0 +1,25 @@
+# Experiment 2: Pseudo-label 추가
+# EN gold + KO pseudo 학습
+
+_base_: "../baseline.yaml"
+
+experiment:
+  name: "exp2_pseudo_added"
+  description: "Trained on EN gold + KO pseudo-labeled data"
+
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+    - "data/pseudo/ko_pseudo.jsonl"  # Filtered pseudo-labels
+
+  dev:
+    - "data/processed/en_dev.jsonl"
+
+  test:
+    - "data/processed/en_test.jsonl"
+    - "data/processed/ko_test.jsonl"
+
+output:
+  output_dir: "results/exp2_pseudo_added"
+  checkpoint_dir: "results/checkpoints/exp2_pseudo_added"
+  logging_dir: "logs/exp2_pseudo_added"

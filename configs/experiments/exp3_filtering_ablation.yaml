@@ -1,0 +1,29 @@
+# Experiment 3: Filtering Ablation
+# 여러 필터링 전략 비교
+
+_base_: "../baseline.yaml"
+
+experiment:
+  name: "exp3_filtering_ablation"
+  description: "Ablation study on pseudo-label filtering strategies"
+
+# 이 실험은 run_all_experiments.py에서 여러 변형으로 실행됨
+# Filter A: term_existence only
+# Filter B: + deduplication + category_validation
+# Filter C: + triplet_count_limit + self_consistency
+
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+    - "data/pseudo/ko_pseudo_filter_*.jsonl"  # Will be replaced by script
+
+  dev:
+    - "data/processed/en_dev.jsonl"
+
+  test:
+    - "data/processed/ko_test.jsonl"
+
+output:
+  output_dir: "results/exp3_filtering_ablation"
+  checkpoint_dir: "results/checkpoints/exp3_filtering"
+  logging_dir: "logs/exp3_filtering"

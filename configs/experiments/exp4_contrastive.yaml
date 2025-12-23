@@ -1,0 +1,41 @@
+# Experiment 4: Contrastive Learning
+# EN gold + KO pseudo + Contrastive loss
+
+_base_: "../baseline.yaml"
+
+experiment:
+  name: "exp4_contrastive"
+  description: "Training with contrastive loss for cross-lingual alignment"
+
+model:
+  type: "joint"
+  use_contrastive: true
+
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+    - "data/pseudo/ko_pseudo.jsonl"
+
+  dev:
+    - "data/processed/en_dev.jsonl"
+
+  test:
+    - "data/processed/en_test.jsonl"
+    - "data/processed/ko_test.jsonl"
+
+training:
+  # Contrastive learning settings
+  contrastive_lambda: 0.1  # Weight for contrastive loss
+  contrastive_temperature: 0.07
+
+  # Positive pair strategy
+  positive_pair_strategy: "same_category"  # same_category or translation
+
+  # Hard negative mining
+  use_hard_negatives: true
+  hard_negative_strategy: "different_polarity"
+
+output:
+  output_dir: "results/exp4_contrastive"
+  checkpoint_dir: "results/checkpoints/exp4_contrastive"
+  logging_dir: "logs/exp4_contrastive"

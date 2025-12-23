@@ -1,0 +1,31 @@
+# Experiment 5: Few-shot Learning
+# EN gold + KO pseudo + KO gold (10/50/100 shots)
+
+_base_: "../baseline.yaml"
+
+experiment:
+  name: "exp5_fewshot"
+  description: "Few-shot learning with small amount of KO gold data"
+
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+    - "data/pseudo/ko_pseudo.jsonl"
+    - "data/processed/ko_gold_fewshot.jsonl"  # Will be created by script
+
+  dev:
+    - "data/processed/en_dev.jsonl"
+
+  test:
+    - "data/processed/ko_test.jsonl"
+
+# Few-shot settings (override in script)
+fewshot:
+  num_shots: 10  # 10, 50, or 100
+  sample_strategy: "random"  # random or balanced
+  seed: 42
+
+output:
+  output_dir: "results/exp5_fewshot"
+  checkpoint_dir: "results/checkpoints/exp5_fewshot"
+  logging_dir: "logs/exp5_fewshot"

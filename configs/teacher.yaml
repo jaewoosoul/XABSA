@@ -1,0 +1,66 @@
+# LLM Teacher Configuration
+
+teacher:
+  # Teacher type: openai, claude, gemini, mock
+  type: "gemini"
+
+  # Model name
+  # OpenAI: gpt-4-turbo-preview, gpt-3.5-turbo
+  # Claude: claude-3-opus-20240229, claude-3-sonnet-20240229
+  # Gemini: gemini-flash-latest, gemini-pro-latest, gemini-2.5-flash, gemini-2.5-pro
+  model: "gemini-flash-latest"
+
+  # API settings
+  api_key_env: "GOOGLE_API_KEY"  # OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, or GEMINI_API_KEY
+  api_base: null  # Optional: custom API base URL
+
+  # Generation settings
+  temperature: 0.0  # Low temperature for consistent output
+  max_tokens: 1000
+  top_p: 1.0
+
+  # Retry settings
+  max_retries: 3
+  retry_delay: 1.0  # seconds
+
+  # Rate limiting
+  requests_per_minute: 50
+
+  # Self-consistency (optional)
+  use_self_consistency: false
+  num_consistency_samples: 3
+  consistency_threshold: 0.6  # 60% agreement required
+
+# Prompt settings
+prompt:
+  template_path: "src/teacher/prompts.py"
+  include_examples: true
+  num_examples: 3
+
+# Filtering settings
+filtering:
+  # Filter 1: Term existence check
+  check_term_existence: true
+
+  # Filter 2: Deduplication
+  remove_duplicates: true
+  normalize_whitespace: true
+
+  # Filter 3: Category validation
+  validate_category: true
+  map_to_etc: true  # Map unknown categories to ETC
+
+  # Filter 4: Triplet count limit
+  max_triplets_per_text: 8
+
+  # Filter 5: Self-consistency
+  use_self_consistency: false
+
+# Taxonomy
+taxonomy_path: "configs/taxonomy.yaml"
+
+# Output settings
+output:
+  save_raw: true  # Save before filtering
+  save_filtered: true
+  save_summary: true  # Save filtering statistics

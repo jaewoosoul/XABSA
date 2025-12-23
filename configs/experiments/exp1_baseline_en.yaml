@@ -1,0 +1,22 @@
+# Experiment 1: Baseline (EN only)
+# Inherits from configs/baseline.yaml
+
+_base_: "../baseline.yaml"
+
+experiment:
+  name: "exp1_baseline_en"
+  description: "Baseline trained on English gold data, evaluated on EN test and KO test (zero-shot)"
+
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+  dev:
+    - "data/processed/en_dev.jsonl"
+  test:
+    - "data/processed/en_test.jsonl"
+    - "data/processed/ko_test.jsonl"
+
+output:
+  output_dir: "results/exp1_baseline_en"
+  checkpoint_dir: "results/checkpoints/exp1_baseline_en"
+  logging_dir: "logs/exp1_baseline_en"

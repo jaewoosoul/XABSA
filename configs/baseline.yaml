@@ -1,0 +1,96 @@
+# Baseline Experiment Configuration
+# EN gold 학습 -> KO 평가 (zero-shot)
+
+experiment:
+  name: "baseline_en_only"
+  description: "Baseline model trained on English gold data only"
+  seed: 42
+
+# Model configuration
+model:
+  type: "joint"  # joint or pipeline
+  backbone: "xlm-roberta-base"
+
+  # Task-specific settings
+  num_ate_labels: 3  # B, I, O
+  num_category_labels: 13  # 12 categories + ETC
+  num_polarity_labels: 3  # positive, negative, neutral
+
+  # Architecture
+  dropout: 0.1
+  hidden_size: 768
+
+# Data configuration
+data:
+  train:
+    - "data/processed/en_train.jsonl"
+
+  dev:
+    - "data/processed/en_dev.jsonl"
+
+  test:
+    - "data/processed/en_test.jsonl"
+    - "data/processed/ko_test.jsonl"  # Zero-shot evaluation
+
+  max_length: 128
+
+  # Data augmentation (optional)
+  use_augmentation: false
+
+# Training configuration
+training:
+  num_epochs: 10
+  batch_size: 16
+  learning_rate: 2e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+
+  # Loss weights (for multi-task)
+  loss_weights:
+    ate: 1.0
+    category: 1.0
+    polarity: 1.0
+
+  # Gradient
+  max_grad_norm: 1.0
+
+  # Early stopping
+  early_stopping_patience: 3
+  early_stopping_metric: "triplet_f1"
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "triplet_f1"  # Strict F1 (term span + category + polarity)
+    - "ate_f1"      # Span-level F1
+    - "category_f1"
+    - "polarity_f1"
+
+  # Save predictions
+  save_predictions: true
+
+# Output configuration
+output:
+  output_dir: "results/baseline"
+  checkpoint_dir: "results/checkpoints/baseline"
+  logging_dir: "logs/baseline"
+
+  # Save strategy
+  save_strategy: "epoch"
+  save_total_limit: 3
+
+  # Logging
+  logging_steps: 50
+  eval_steps: 100
+
+# Logging
+logging:
+  use_wandb: false
+  wandb_project: "xabsa"
+  wandb_entity: null
+
+  use_tensorboard: true
+
+# Device
+device: "cuda"  # cuda or cpu
+fp16: true  # Mixed precision training
