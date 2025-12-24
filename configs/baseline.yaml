@@ -9,30 +9,41 @@ experiment:
 # Model configuration
 model:
   type: "joint"  # joint or pipeline
-  backbone: "xlm-roberta-base"
+  backbone: "xlm-roberta-base" # huggingface model - 다국어 transformer 언어모델 체크포인트 이름
 
   # Task-specific settings
-  num_ate_labels: 3  # B, I, O
-  num_category_labels: 13  # 12 categories + ETC
+  num_ate_labels: 3  # I, B, O
+  num_category_labels: 13  # 12 categories + ETC(기타)
   num_polarity_labels: 3  # positive, negative, neutral
 
   # Architecture
   dropout: 0.1
   hidden_size: 768
 
+  # Term pooling strategy
+  term_pooling: "mean"  # mean or start
+
 # Data configuration
 data:
-  train:
+  # Training data paths
+  train_paths:
     - "data/processed/en_train.jsonl"
 
-  dev:
+  # Evaluation data paths
+  eval_paths:
     - "data/processed/en_dev.jsonl"
-
-  test:
     - "data/processed/en_test.jsonl"
     - "data/processed/ko_test.jsonl"  # Zero-shot evaluation
 
+  # Split filtering
+  train_splits: ["train"]  # Filter by split field in JSONL
+  eval_splits: ["dev", "test"]  # For multi-split evaluation
+
   max_length: 128
+
+  # Term matching options
+  match_normalize_whitespace: true  # Normalize whitespace for term matching
+  match_all_occurrences: false  # If true, match all term occurrences; if false, match first only
 
   # Data augmentation (optional)
   use_augmentation: false
@@ -43,20 +54,26 @@ training:
   batch_size: 16
   learning_rate: 2e-5
   weight_decay: 0.01
-  warmup_ratio: 0.1
+  warmup_ratio: 0.1 # 전체 학습 스텝 중 앞의 10프로는 learning rate를 천천히 올림
+
+  # Optimizer
+  optimizer: "adamw"  # adamw or adam
 
   # Loss weights (for multi-task)
   loss_weights:
-    ate: 1.0
+    ate: 1.0 # 실제로는 ATE가 더 어려워서 가중치를 2~3으로 올리기도 함
     category: 1.0
     polarity: 1.0
 
-  # Gradient
+  # Gradient clipping
   max_grad_norm: 1.0
 
   # Early stopping
-  early_stopping_patience: 3
+  early_stopping_patience: 3 # 3번 연속으로 검증이 개선되지 않으면 종료
   early_stopping_metric: "triplet_f1"
+
+  # Save best checkpoint by metric
+  save_best_by: "triplet_f1"  # triplet_f1 or ate_f1
 
 # Evaluation configuration
 evaluation:
@@ -85,12 +102,17 @@ output:
 
 # Logging
 logging:
+  log_level: "INFO"
   use_wandb: false
   wandb_project: "xabsa"
   wandb_entity: null
 
-  use_tensorboard: true
+  use_tensorboard: false
 
 # Device
 device: "cuda"  # cuda or cpu
-fp16: true  # Mixed precision training
+fp16: false  # Mixed precision training
+
+# Taxonomy
+taxonomy:
+  taxonomy_path: "configs/taxonomy.yaml"
