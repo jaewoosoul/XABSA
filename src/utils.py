@@ -44,6 +44,8 @@ def load_config(config_path: str) -> Dict[str, Any]:
 
 def init_wandb(config: Dict[str, Any], task_name: str):
     """Initialize wandb logging."""
+    logger = logging.getLogger(__name__)
+
     if config.get("logging", {}).get("use_wandb", False):
         if not HAS_WANDB:
             logger.warning("wandb is not installed. Skipping wandb initialization.")
