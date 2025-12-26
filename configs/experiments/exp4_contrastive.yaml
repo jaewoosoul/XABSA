@@ -12,16 +12,15 @@ model:
   use_contrastive: true
 
 data:
-  train:
+  train_paths:
     - "data/processed/en_train.jsonl"
     - "data/pseudo/ko_pseudo.jsonl"
-
-  dev:
+  eval_paths:
     - "data/processed/en_dev.jsonl"
-
-  test:
     - "data/processed/en_test.jsonl"
     - "data/processed/ko_test.jsonl"
+  train_splits: ["train"]
+  eval_splits: ["dev", "test"]
 
 training:
   # Contrastive learning settings

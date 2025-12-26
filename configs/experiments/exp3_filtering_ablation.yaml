@@ -13,15 +13,14 @@ experiment:
 # Filter C: + triplet_count_limit + self_consistency
 
 data:
-  train:
+  train_paths:
     - "data/processed/en_train.jsonl"
     - "data/pseudo/ko_pseudo_filter_*.jsonl"  # Will be replaced by script
-
-  dev:
+  eval_paths:
     - "data/processed/en_dev.jsonl"
-
-  test:
     - "data/processed/ko_test.jsonl"
+  train_splits: ["train"]
+  eval_splits: ["dev", "test"]
 
 output:
   output_dir: "results/exp3_filtering_ablation"
