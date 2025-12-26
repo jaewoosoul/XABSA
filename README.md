@@ -108,6 +108,18 @@ cat data/pseudo/summary.json | jq
 
 ---
 
+## 📚 상세 사용 가이드
+
+**[→ Scripts CLI 사용법 보기 (SCRIPTS.md)](SCRIPTS.md)**
+
+모든 스크립트의 CLI 옵션과 상세한 사용 예시를 확인하세요:
+- 데이터 준비 스크립트 (create_korean_data.py, prepare_data.py 등)
+- Pseudo-label 생성 (run_full_pipeline.py, run_teacher.py)
+- 모델 학습 및 평가 (train.py, eval.py)
+- 일반적인 워크플로우
+
+---
+
 ## 📊 현재 프로젝트 상태
 
 ### ✅ Phase 1: 데이터 & Teacher (완료)
