@@ -1,5 +1,5 @@
 # Experiment 2: Pseudo-label 추가
-# EN gold + KO pseudo 학습
+# EN gold + KO pseudo 학습(영어 정답 데이터 + 한국어 가짜 라벨 데이터를 같이 학습)
 
 _base_: "../baseline.yaml"
 

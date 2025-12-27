@@ -105,15 +105,58 @@ class BaseTeacher(ABC):
         import json
         import re
 
-        # Try to extract JSON from response
-        # Look for JSON object or array
-        json_match = re.search(r'\{.*\}|\[.*\]', response, re.DOTALL)
+        # Remove markdown code blocks if present
+        # Handle ```json ... ``` or ``` ... ```
+        response = re.sub(r'```json\s*\n?', '', response)
+        response = re.sub(r'```\s*\n?', '', response)
+        response = response.strip()
 
+        # Try multiple parsing strategies
+        # Strategy 1: Try to parse the entire response as JSON
+        try:
+            data = json.loads(response)
+            if isinstance(data, dict):
+                if "triplets" in data:
+                    return data["triplets"]
+                elif "aspects" in data:
+                    return data["aspects"]
+            elif isinstance(data, list):
+                return data
+        except json.JSONDecodeError:
+            pass
+
+        # Strategy 2: Extract JSON object using balanced braces
+        # Find the first { and match until the closing }
+        brace_count = 0
+        start_idx = -1
+        for i, char in enumerate(response):
+            if char == '{':
+                if start_idx == -1:
+                    start_idx = i
+                brace_count += 1
+            elif char == '}':
+                brace_count -= 1
+                if brace_count == 0 and start_idx != -1:
+                    json_str = response[start_idx:i+1]
+                    try:
+                        data = json.loads(json_str)
+                        if isinstance(data, dict):
+                            if "triplets" in data:
+                                return data["triplets"]
+                            elif "aspects" in data:
+                                return data["aspects"]
+                        elif isinstance(data, list):
+                            return data
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"Balanced braces JSON decode error: {e}")
+                        logger.debug(f"Attempted JSON: {json_str[:300]}")
+                    break
+
+        # Strategy 3: Use regex to find JSON (fallback)
+        json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response, re.DOTALL)
         if json_match:
             try:
                 data = json.loads(json_match.group())
-
-                # Handle different response formats
                 if isinstance(data, dict):
                     if "triplets" in data:
                         return data["triplets"]
@@ -121,11 +164,12 @@ class BaseTeacher(ABC):
                         return data["aspects"]
                 elif isinstance(data, list):
                     return data
-
             except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {e}")
-                raise
+                logger.debug(f"JSON decode error: {e}")
+                logger.debug(f"Attempted to parse: {json_match.group()[:200]}")
 
+        # If all strategies fail, log the full response for debugging
+        logger.error(f"Could not parse triplets from response. Full response: {response[:500]}")
         raise ValueError(f"Could not parse triplets from response: {response[:100]}...")
 
     def __repr__(self) -> str:

@@ -21,7 +21,7 @@ class GeminiTeacher(BaseTeacher):
         model: str = "gemini-1.5-flash",
         api_key: Optional[str] = None,
         temperature: float = 0.0,
-        max_tokens: int = 1000,
+        max_tokens: int = 2000,  # Increased default to prevent truncation
         max_retries: int = 3,
         retry_delay: float = 1.0,
         **kwargs
@@ -63,16 +63,20 @@ class GeminiTeacher(BaseTeacher):
             genai.configure(api_key=self.api_key)
 
             # Create model configuration (without JSON mode for compatibility)
+            # Note: max_output_tokens must be set high enough for complete JSON responses
             generation_config = {
                 "temperature": self.temperature,
-                "max_output_tokens": self.max_tokens
+                "max_output_tokens": self.max_tokens,
+                "top_p": 1.0
             }
+            
+            logger.debug(f"Generation config: max_output_tokens={self.max_tokens}")
 
-            # Add "models/" prefix if not present
-            model_name = self.model if self.model.startswith("models/") else f"models/{self.model}"
-
+            # Create model - GenerativeModel accepts model name WITHOUT models/ prefix
+            # The library handles the prefix internally
+            # Common working model names: "gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash"
             self.client = genai.GenerativeModel(
-                model_name=model_name,
+                model_name=self.model,  # Use model name directly without prefix
                 generation_config=generation_config
             )
 
@@ -115,8 +119,31 @@ class GeminiTeacher(BaseTeacher):
                 # Generate content
                 response = self.client.generate_content(prompt)
 
-                # Extract content
+                # Extract content - check if response is complete
+                if hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    finish_reason = getattr(candidate, 'finish_reason', None)
+                    
+                    # finish_reason can be enum, string, or integer
+                    # 1 = STOP, 2 = MAX_TOKENS, 3 = SAFETY, etc.
+                    is_max_tokens = (
+                        finish_reason == 'MAX_TOKENS' or 
+                        finish_reason == 2 or 
+                        str(finish_reason) == '2' or
+                        (hasattr(finish_reason, 'name') and finish_reason.name == 'MAX_TOKENS')
+                    )
+                    
+                    if is_max_tokens:
+                        logger.warning(f"Response was truncated (MAX_TOKENS). Consider increasing max_tokens (current: {self.max_tokens})")
+                    elif finish_reason and finish_reason != 'STOP' and finish_reason != 1:
+                        logger.warning(f"Response finished with reason: {finish_reason}")
+                
                 content = response.text
+                
+                # Debug: log full response for troubleshooting
+                if attempt == 0:  # Only log on first attempt to avoid spam
+                    logger.debug(f"Full API response length: {len(content)} chars")
+                    logger.debug(f"First 500 chars: {content[:500]}")
 
                 # Parse triplets
                 triplets = self._parse_response(content)
@@ -128,6 +155,10 @@ class GeminiTeacher(BaseTeacher):
                 logger.warning(
                     f"Attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
+                # Log full response on error for debugging
+                if 'response' in locals() and hasattr(response, 'text'):
+                    logger.debug(f"Failed response length: {len(response.text)} chars")
+                    logger.debug(f"Failed response (full): {response.text}")
 
                 if attempt < self.max_retries - 1:
                     time.sleep(self.retry_delay)
