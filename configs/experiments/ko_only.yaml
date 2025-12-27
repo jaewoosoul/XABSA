@@ -1,0 +1,118 @@
+# Korean Only Experiment Configuration
+# KO pseudo-label만 사용하여 학습
+
+experiment:
+  name: "ko_only"
+  description: "Trained on Korean pseudo-labeled data only"
+  seed: 42
+
+# Model configuration
+model:
+  type: "joint"
+  backbone: "xlm-roberta-base"
+
+  # Task-specific settings
+  num_ate_labels: 3  # I, B, O
+  num_category_labels: 13  # 12 categories + ETC(기타)
+  num_polarity_labels: 3  # positive, negative, neutral
+
+  # Architecture
+  dropout: 0.1
+  hidden_size: 768
+
+  # Term pooling strategy
+  term_pooling: "mean"  # mean or start
+
+# Data configuration
+data:
+  # Training data paths
+  train_paths:
+    - "data/pseudo/ko_pseudo.jsonl"  # Korean pseudo-labels
+
+  # Evaluation data paths (없으면 train 데이터에서 일부를 사용)
+  eval_paths:
+    - "data/pseudo/ko_pseudo.jsonl"  # 같은 데이터 사용 (실제로는 train/val split 필요)
+
+  # Split filtering - unlabeled를 train으로 사용
+  train_splits: ["unlabeled", "train"]  # unlabeled도 train으로 사용
+  eval_splits: ["unlabeled", "train"]  # 평가용 (실제로는 별도 split 필요)
+
+  max_length: 128
+
+  # Term matching options
+  match_normalize_whitespace: true
+  match_all_occurrences: false
+
+  # Data augmentation (optional)
+  use_augmentation: false
+
+# Training configuration
+training:
+  num_epochs: 10
+  batch_size: 16
+  learning_rate: 1e-5  # Reduced from 2e-5 for more stable training
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+
+  # Optimizer
+  optimizer: "adamw"
+
+  # Loss weights (for multi-task)
+  # ATE weight increased to handle class imbalance (O vs B/I)
+  loss_weights:
+    ate: 3.0  # Increased from 1.0 to emphasize ATE learning
+    category: 1.0
+    polarity: 1.0
+
+  # Gradient clipping
+  max_grad_norm: 1.0
+
+  # Early stopping
+  early_stopping_patience: 5  # Increased from 3 to allow more training
+  early_stopping_metric: "triplet_f1"
+
+  # Save best checkpoint by metric
+  save_best_by: "triplet_f1"
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "triplet_f1"
+    - "ate_f1"
+    - "category_f1"
+    - "polarity_f1"
+
+  # Save predictions
+  save_predictions: true
+
+# Output configuration
+output:
+  output_dir: "results/ko_only"
+  checkpoint_dir: "results/checkpoints/ko_only"
+  logging_dir: "logs/ko_only"
+
+  # Save strategy
+  save_strategy: "epoch"
+  save_total_limit: 3
+
+  # Logging
+  logging_steps: 50
+  eval_steps: 100
+
+# Logging
+logging:
+  log_level: "INFO"
+  use_wandb: false
+  wandb_project: "xabsa"
+  wandb_entity: null
+
+  use_tensorboard: false
+
+# Device
+device: "cuda"  # cuda or cpu
+fp16: false
+
+# Taxonomy
+taxonomy:
+  taxonomy_path: "configs/taxonomy.yaml"
+
