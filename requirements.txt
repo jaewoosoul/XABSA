@@ -1,3 +1,4 @@
+# Python 3.11 required
 # Core ML libraries
 torch>=2.0.0
 transformers>=4.30.0
