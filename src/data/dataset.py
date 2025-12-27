@@ -59,12 +59,33 @@ class XABSADataset(Dataset):
         self.bio2id = {"O": 0, "B": 1, "I": 2}
         self.id2bio = {v: k for k, v in self.bio2id.items()}
 
-        # Statistics
+        # Statistics - compute upfront to avoid zero stats
         self.skipped_terms = 0
         self.total_terms = 0
+        self._compute_stats()
 
     def __len__(self) -> int:
         return len(self.data)
+    
+    def _compute_stats(self):
+        """Pre-compute statistics by processing all samples."""
+        # Reset stats
+        self.skipped_terms = 0
+        self.total_terms = 0
+        
+        # Process all samples to get accurate statistics
+        for sample in self.data:
+            text = sample.get("text", "")
+            triplets = sample.get("gold_triplets", [])
+            
+            for triplet in triplets:
+                self.total_terms += 1
+                term = triplet.get("term", "")
+                
+                # Check if term can be found
+                spans = self._find_term_spans(text, term)
+                if not spans:
+                    self.skipped_terms += 1
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         """
@@ -135,39 +156,80 @@ class XABSADataset(Dataset):
     def _find_term_spans(self, text: str, term: str) -> List[Tuple[int, int]]:
         """
         Find all occurrences of term in text.
+        
+        Returns spans in original text coordinates (for offset_mapping alignment).
+        offset_mapping은 원본 text 기준이므로, 반드시 원본 text의 인덱스를 반환해야 함.
 
         Args:
-            text: Input text
+            text: Input text (original)
             term: Term to find
 
         Returns:
-            List of (start, end) tuples
+            List of (start, end) tuples in original text coordinates
         """
         spans = []
 
-        # Normalize if needed
+        # Strategy 1: Direct substring search in original text (most reliable)
+        # This preserves exact character positions for offset_mapping
+        start = 0
+        while True:
+            idx = text.find(term, start)
+            if idx != -1:
+                spans.append((idx, idx + len(term)))
+                if not self.match_all_occurrences:
+                    break
+                start = idx + 1
+            else:
+                break
+        
+        # If found directly, return (no normalization needed)
+        if spans:
+            return spans
+
+        # Strategy 2: If direct search fails and normalization is enabled,
+        # try normalized matching but map back to original positions
         if self.match_normalize_whitespace:
             text_norm = self._normalize_for_matching(text)
             term_norm = self._normalize_for_matching(term)
-        else:
-            text_norm = text
-            term_norm = term
-
-        # Find all occurrences
-        start = 0
-        while True:
-            idx = text_norm.find(term_norm, start)
-            if idx == -1:
-                break
-
-            # Map back to original text positions
-            # (In normalized text, positions should match)
-            spans.append((idx, idx + len(term_norm)))
-
-            if not self.match_all_occurrences:
-                break
-
-            start = idx + 1
+            
+            # Check if normalized versions match
+            if term_norm not in text_norm:
+                return spans
+            
+            # Build mapping: for each position in original text,
+            # track its corresponding position in normalized text
+            # We'll use a sliding window approach to find matches
+            term_chars = [c for c in term_norm if not c.isspace()]
+            
+            # Try to find term by matching non-whitespace characters
+            i = 0
+            while i < len(text):
+                # Try to match term starting at position i
+                text_chars = []
+                orig_start = i
+                orig_end = i
+                
+                for j in range(i, len(text)):
+                    char = text[j]
+                    if not char.isspace():
+                        text_chars.append(char)
+                    orig_end = j + 1
+                    
+                    # Check if we have enough characters
+                    if len(text_chars) >= len(term_chars):
+                        # Compare
+                        if text_chars[:len(term_chars)] == term_chars:
+                            spans.append((orig_start, orig_end))
+                            if not self.match_all_occurrences:
+                                return spans
+                            i = orig_end
+                            break
+                
+                i += 1
+                
+                # Safety: prevent infinite loop
+                if i > len(text):
+                    break
 
         return spans
 
